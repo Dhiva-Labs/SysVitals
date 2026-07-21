@@ -1,0 +1,43 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101c2e"/>
+      <stop offset="1" stop-color="#1c2c4a"/>
+    </linearGradient>
+    <linearGradient id="omega" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5be3ff"/>
+      <stop offset="1" stop-color="#1e9fd6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- tile -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="90" fill="none"
+        stroke="#31466b" stroke-width="4"/>
+  <rect width="512" height="256" rx="100" fill="url(#shine)"/>
+
+  <!-- corner meter: four mini core-bars -->
+  <g transform="translate(374 84)">
+    <rect x="0"  y="26" width="14" height="30" rx="5" fill="#3ddc84"/>
+    <rect x="22" y="14" width="14" height="42" rx="5" fill="#3ddc84"/>
+    <rect x="44" y="34" width="14" height="22" rx="5" fill="#ffc857"/>
+    <rect x="66" y="6"  width="14" height="50" rx="5" fill="#ff6b6b"/>
+  </g>
+
+  <!-- omega -->
+  <path d="M 158 336 H 222 Q 158 296 158 226 A 98 98 0 1 1 354 226 Q 354 296 290 336 H 354"
+        fill="none" stroke="url(#omega)" stroke-width="36"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ECG health line on its own lane below -->
+  <path d="M 72 430 H 218 L 240 430 L 254 386 L 268 456 L 282 430 H 440"
+        fill="none" stroke="#3ddc84" stroke-width="24" stroke-opacity="0.18"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 72 430 H 218 L 240 430 L 254 386 L 268 456 L 282 430 H 440"
+        fill="none" stroke="#3ddc84" stroke-width="12"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
