@@ -2,6 +2,10 @@
 
 # SysVitals
 
+[![ARM64 builds](https://github.com/Dhiva-Labs/SysVitals/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Dhiva-Labs/SysVitals/actions/workflows/ci.yml)
+![Linux x64 | arm64](https://img.shields.io/badge/Linux-x64%20%7C%20arm64-informational?logo=linux&logoColor=white)
+![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
+
 One terminal tool that replaces four: **htop** (processes) + **netstat**
 (connections) + **ss -tlnp** (open ports) + **smartctl** (SSD health).
 
@@ -13,6 +17,25 @@ sudo ./sysvitals.py       # + full NVMe SMART (wear %, TBW, power-on hours…)
 ./sysvitals.py --dump     # one plain-text snapshot (for scripts / ssh one-liners)
 ./sysvitals.py -i 1       # 1-second refresh
 ```
+
+## Platforms
+
+Linux only, on **x64 (x86-64) and arm64 (aarch64)**. It is a single Python
+script with no compiled parts, so installation is the same on both: download
+`sysvitals.py` and run it with any Python 3.8+.
+
+- Everything is read from `/proc`, `/sys` and the NVMe admin ioctl; nothing is
+  architecture-specific.
+- The NVMe ioctl request is packed in the kernel's native byte order, and the
+  test suite compiles a small C program against the system's
+  `<linux/nvme_ioctl.h>` to check that the struct size, every field offset and
+  the ioctl number match what SysVitals sends. That check runs on x64 and arm64
+  in CI.
+- CI runs the whole test suite (including the curses TUI in a pty and
+  `--dump`) on Ubuntu 24.04 x64 and Ubuntu 24.04 arm64.
+- CPU temperature is shown when the kernel exposes a recognised hwmon sensor
+  (`k10temp`, `coretemp`, `zenpower`, `cpu_thermal`); machines without one, such
+  as most virtual machines, simply omit that line.
 
 ## Tabs
 
