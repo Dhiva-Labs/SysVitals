@@ -220,15 +220,17 @@ TCP_STATES = {
 def _decode_addr(hexstr, family):
     addr_hex, _, port_hex = hexstr.partition(":")
     port = int(port_hex, 16)
-    raw = bytes.fromhex(addr_hex)
-    if family == socket.AF_INET:
-        ip = socket.inet_ntop(family, raw[::-1])
-    else:
-        # /proc stores IPv6 as four little-endian 32-bit words
-        packed = b"".join(raw[i:i + 4][::-1] for i in range(0, 16, 4))
-        ip = socket.inet_ntop(family, packed)
-        if ip.startswith("::ffff:"):
-            ip = ip[7:]
+    # /proc/net prints each 32-bit word of the network-order address with %08X,
+    # i.e. as a host-order integer. Packing the words back in native byte order
+    # restores the network-order bytes on little- and big-endian hosts alike.
+    nwords = 1 if family == socket.AF_INET else 4
+    if len(addr_hex) != nwords * 8:
+        raise ValueError(f"bad address field {addr_hex!r}")
+    words = [int(addr_hex[i:i + 8], 16) for i in range(0, nwords * 8, 8)]
+    packed = struct.pack("=%dI" % nwords, *words)
+    ip = socket.inet_ntop(family, packed)
+    if family == socket.AF_INET6 and ip.startswith("::ffff:"):
+        ip = ip[7:]
     return ip, port
 
 
@@ -317,9 +319,17 @@ def port_service(port, proto):
 
 # ---------------------------------------------------------------- disks / SMART
 
-NVME_IOCTL_ADMIN_CMD = 0xC0484E41
+NVME_IOCTL_ADMIN_CMD = 0xC0484E41   # _IOWR('N', 0x41, struct nvme_admin_cmd)
 NVME_ADMIN_GET_LOG_PAGE = 0x02
 NVME_LOG_SMART = 0x02
+
+# struct nvme_admin_cmd (linux/nvme_ioctl.h): opcode, flags, rsvd1, nsid, cdw2,
+# cdw3, metadata, addr, metadata_len, data_len, cdw10..cdw15, timeout_ms, result.
+# Every field sits at its natural alignment, so the struct has no padding on any
+# Linux ABI (x86-64, arm64, ...) and "=" (native byte order, standard sizes, no
+# alignment) reproduces it exactly: 72 bytes, which is the size encoded in
+# NVME_IOCTL_ADMIN_CMD. The kernel reads it in host byte order, hence not "<".
+NVME_ADMIN_CMD_FMT = "=BBHIIIQQIIIIIIIIII"
 
 
 CRITICAL_WARNING_FLAGS = [
@@ -363,6 +373,21 @@ def parse_nvme_smart(d):
     }
 
 
+def nvme_smart_cmd(data_addr):
+    """Admin command that reads the 512-byte SMART/health log page into the
+    buffer at data_addr."""
+    cdw10 = ((512 // 4 - 1) << 16) | NVME_LOG_SMART
+    return struct.pack(
+        NVME_ADMIN_CMD_FMT,
+        NVME_ADMIN_GET_LOG_PAGE, 0, 0,      # opcode, flags, rsvd
+        0xFFFFFFFF, 0, 0,                    # nsid, cdw2, cdw3
+        0, data_addr,                        # metadata, addr
+        0, 512,                              # metadata_len, data_len
+        cdw10, 0, 0, 0, 0, 0,                # cdw10..15
+        0, 0,                                # timeout_ms, result
+    )
+
+
 def nvme_smart(ctrl_dev):
     """Read the NVMe SMART/health log page via the admin ioctl (needs root)."""
     try:
@@ -373,16 +398,7 @@ def nvme_smart(ctrl_dev):
         return {"error": str(e)}
     try:
         buf = ctypes.create_string_buffer(512)
-        cdw10 = ((512 // 4 - 1) << 16) | NVME_LOG_SMART
-        cmd = struct.pack(
-            "<BBHIIIQQIIIIIIIIII",
-            NVME_ADMIN_GET_LOG_PAGE, 0, 0,      # opcode, flags, rsvd
-            0xFFFFFFFF, 0, 0,                    # nsid, cdw2, cdw3
-            0, ctypes.addressof(buf),            # metadata, addr
-            0, 512,                              # metadata_len, data_len
-            cdw10, 0, 0, 0, 0, 0,                # cdw10..15
-            0, 0,                                # timeout_ms, result
-        )
+        cmd = nvme_smart_cmd(ctypes.addressof(buf))
         fcntl.ioctl(fd, NVME_IOCTL_ADMIN_CMD, bytearray(cmd))
         return parse_nvme_smart(buf.raw)
     except OSError as e:
