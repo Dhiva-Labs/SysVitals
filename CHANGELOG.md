@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- CI runs the tests and `--dump` on Linux x64 and Linux arm64.
+- Tests that compare the NVMe admin command layout and ioctl number with the
+  kernel's `<linux/nvme_ioctl.h>` and cover the `/proc/net` address decoding.
+
+### Changed
+
+- The NVMe admin command is packed in native byte order (it was forced to
+  little-endian) and the `/proc/net` address decoder no longer assumes a
+  little-endian host. Output is unchanged on x86-64 and arm64.
+
 ## [1.0.0] - 2026-07-22
 
 ### Added

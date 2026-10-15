@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.arch }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+        python-version: ["3.9", "3.12"]
+        include:
+          - os: ubuntu-24.04
+            arch: x64
+            machine: x86_64
+            file-magic: x86-64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            machine: aarch64
+            file-magic: ARM aarch64
+    env:
+      # fail instead of skip if the C compiler or kernel headers are missing
+      SYSVITALS_REQUIRE_UAPI_CHECK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Assert the interpreter matches the runner architecture
+        shell: bash
+        run: |
+          uname -m
+          python -c "import platform; print(platform.machine())"
+          test "$(uname -m)" = "${{ matrix.machine }}"
+          test "$(python -c 'import platform; print(platform.machine())')" = "${{ matrix.machine }}"
+          info="$(file "$(python -c 'import os, sys; print(os.path.realpath(sys.executable))')")"
+          echo "$info"
+          echo "$info" | grep -q "${{ matrix.file-magic }}"
+      - name: Unit and integration tests (NVMe ABI, SMART parser, --dump, TUI in a pty)
+        shell: bash
+        run: python -m unittest discover -s tests -v
+      - name: --version and --dump
+        shell: bash
+        run: |
+          python sysvitals.py --version
+          python sysvitals.py --dump 2>&1 | tee dump.txt
+          for section in "SysVitals" "Top processes by CPU" "Network:" "Listening ports" "Disks" "Mounts"; do
+            grep -q "$section" dump.txt || { echo "missing section: $section"; exit 1; }
+          done
+          if grep -q Traceback dump.txt; then echo "traceback in --dump output"; exit 1; fi
+      - name: --dump as root
+        shell: bash
+        run: |
+          ls -d /sys/block/nvme* 2>/dev/null || echo "no NVMe drive on this runner: real SMART reads cannot be exercised here"
+          sudo "$(command -v python)" sysvitals.py --dump 2>&1 | tee dump-root.txt
+          if grep -q Traceback dump-root.txt; then echo "traceback in --dump output"; exit 1; fi
