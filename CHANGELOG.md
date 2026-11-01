@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Distribution packages built and tested in CI: a noarch `.rpm` for Fedora,
+  RHEL and openSUSE, an Arch Linux package and an AUR PKGBUILD. CI installs
+  them on Fedora, openSUSE Tumbleweed and Arch Linux and runs the TUI there;
+  a published release gets them attached automatically.
 - CI runs the tests and `--dump` on Linux x64 and Linux arm64.
 - Tests that compare the NVMe admin command layout and ioctl number with the
   kernel's `<linux/nvme_ioctl.h>` and cover the `/proc/net` address decoding.

@@ -5,6 +5,7 @@
 [![ARM64 builds](https://github.com/Dhiva-Labs/SysVitals/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Dhiva-Labs/SysVitals/actions/workflows/ci.yml)
 ![Linux x64 | arm64](https://img.shields.io/badge/Linux-x64%20%7C%20arm64-informational?logo=linux&logoColor=white)
 ![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
+![Linux: rpm | Arch](https://img.shields.io/badge/Linux-rpm%20%7C%20Arch-informational?logo=linux&logoColor=white)
 
 One terminal tool that replaces four: **htop** (processes) + **netstat**
 (connections) + **ss -tlnp** (open ports) + **smartctl** (SSD health).
@@ -36,6 +37,28 @@ script with no compiled parts, so installation is the same on both: download
 - CPU temperature is shown when the kernel exposes a recognised hwmon sensor
   (`k10temp`, `coretemp`, `zenpower`, `cpu_thermal`); machines without one, such
   as most virtual machines, simply omit that line.
+
+## Packages
+
+From the next release on, each GitHub release carries distribution packages
+next to the script. They are architecture-independent (one file for x86-64
+and arm64) and use the distribution's own Python 3:
+
+| Distribution | File | Install |
+|---|---|---|
+| Fedora, RHEL/Rocky/Alma | `sysvitals-<version>-1.noarch.rpm` | `sudo dnf install ./sysvitals-<version>-1.noarch.rpm` |
+| openSUSE Tumbleweed | the same `.rpm` | `sudo zypper install --allow-unsigned-rpm ./sysvitals-<version>-1.noarch.rpm` |
+| Arch, Manjaro, EndeavourOS | `sysvitals-<version>-1-any.pkg.tar.zst` | `sudo pacman -U ./sysvitals-<version>-1-any.pkg.tar.zst` |
+| AUR | `sysvitals-<version>-aur.tar.gz` (PKGBUILD + .SRCINFO) | `sysvitals` in the AUR once published |
+
+The packages install the command as `sysvitals`. The `.rpm` is unsigned, hence
+zypper's `--allow-unsigned-rpm`. `smartmontools` is a weak dependency (rpm
+Recommends, Arch optdepends): it is only used for SATA drives. CI installs
+each package on Fedora, openSUSE Tumbleweed and Arch Linux (x86-64), and on
+Fedora and openSUSE arm64, and runs `--version`, `--dump` and the TUI through
+every tab there; Arch Linux has no official arm64 image, so on arm64 the Arch
+package gets a static check only. There is no AppImage or Flatpak: it is a
+terminal tool.
 
 ## Tabs
 
