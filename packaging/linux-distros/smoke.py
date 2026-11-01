@@ -25,8 +25,11 @@ def fail(msg):
 
 
 def main():
-    if shutil.which("sysvitals") != CMD:
-        fail(f"sysvitals on PATH is {shutil.which('sysvitals')!r}, not {CMD}")
+    # realpath: on Fedora and Arch /usr/sbin is a symlink to /usr/bin and
+    # comes first on root's PATH.
+    found = shutil.which("sysvitals")
+    if not found or os.path.realpath(found) != CMD:
+        fail(f"sysvitals on PATH is {found!r}, not {CMD}")
 
     out = subprocess.run([CMD, "--version"], capture_output=True, text=True, timeout=30)
     print(out.stdout.strip(), out.stderr.strip())
