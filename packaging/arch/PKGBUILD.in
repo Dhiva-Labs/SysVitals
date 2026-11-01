@@ -1,0 +1,27 @@
+# Maintainer: Dhiva Labs <dhivakar1010@gmail.com>
+#
+# AUR package, built from the release's source archive (SysVitals is one
+# Python script, so there is nothing to compile and no -bin variant).
+# packaging/arch/aur.sh renders this file for each release (version and
+# checksum) and checks it with makepkg; the rendered PKGBUILD and .SRCINFO
+# are what gets pushed to the AUR.
+pkgname=@NAME@
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc='@SUMMARY@'
+arch=('any')
+url='@HOMEPAGE@'
+license=('@LICENSE@')
+depends=(@ARCH_DEPENDS@)
+optdepends=(@ARCH_OPTDEPENDS@)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('@SHA256@')
+
+package() {
+  cd "SysVitals-$pkgver"
+  install -d "$pkgdir/usr/bin"
+  sed '1s|^#!.*$|#!/usr/bin/python3|' sysvitals.py > "$pkgdir/usr/bin/sysvitals"
+  chmod 755 "$pkgdir/usr/bin/sysvitals"
+  install -Dm644 -t "$pkgdir/usr/share/doc/$pkgname" README.md CHANGELOG.md
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
