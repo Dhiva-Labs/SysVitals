@@ -10,6 +10,8 @@
 One terminal tool that replaces four: **htop** (processes) + **netstat**
 (connections) + **ss -tlnp** (open ports) + **smartctl** (SSD health).
 
+**Documentation:** step-by-step guides at [learn.dhivalabs.com](https://learn.dhivalabs.com/apps/sysvitals/): [install](https://learn.dhivalabs.com/apps/sysvitals/install) · [beginner guide](https://learn.dhivalabs.com/apps/sysvitals/getting-started) · [troubleshooting](https://learn.dhivalabs.com/apps/sysvitals/faq). New to the topic? Try the [Networking and SSH](https://learn.dhivalabs.com/tracks/networking/) and [Linux and the terminal](https://learn.dhivalabs.com/tracks/terminal/) learning tracks.
+
 Single-file Python, **zero dependencies** — stdlib only, Python 3.8+.
 
 ```
